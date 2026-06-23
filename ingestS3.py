@@ -26,19 +26,22 @@ def main():
     #Transform dataframe
     df = df.stack(level=1).reset_index()
 
-    df.columns = ["date", "ticker", "close", "high", "low", "open", "volume"]
+    df.columns = ["Date", "Ticker", "Close", "High", "Low", "Open", "Volume"]
     df = df.dropna()
-    df["date"] = df["date"].astype(str)
+    df["Date"] = df["Date"].astype(str)
 
     #Upload 2 S3
-    df.to_csv(io.StringIO(), index=False)
+    buffer = io.StringIO()
+    df.to_csv(buffer, index=False)
 
     S3_KEY = f"daily_prices/run_date={today}/stocks.csv"
     s3.put_object(
         Bucket = S3_BUCKET,
         Key = S3_KEY,
-        Body = io.StringIO().getvalue()
+        Body = buffer.getvalue()
     )
+
+    print(f"Uploaded to s3://{S3_BUCKET}/{S3_KEY}")
 
     print(df.head())
 
